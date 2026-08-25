@@ -1,0 +1,1484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover">
+<title>Gandu — Score Keeper</title>
+<script>(function(){try{if(localStorage.getItem('gandu_theme_v1')==='dark'){document.documentElement.setAttribute('data-theme','dark');}}catch(e){}})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0B2545;
+    --navy-2:#123362;
+    --teal:#0F9B9B;
+    --teal-dark:#0C7F7F;
+    --teal-tint:#E4F6F5;
+    --green:#158A4A;
+    --green-tint:#E1F7EA;
+    --red:#D9372E;
+    --red-tint:#FCE7E5;
+    --amber:#C2790C;
+    --amber-tint:#FCEFD9;
+    --bg:#F2F4F7;
+    --surface:#FFFFFF;
+    --border:#E3E7EC;
+    --text:#101B2D;
+    --text-muted:#5C6B80;
+    --text-faint:#94A0B2;
+    --radius:14px;
+    --radius-sm:10px;
+    --avatar-1:#0F9B9B;
+    --avatar-2:#6C5CE7;
+    --avatar-3:#E0577B;
+    --avatar-4:#DB8A1F;
+    --avatar-5:#1E9E6B;
+    --avatar-6:#3E6FD9;
+    --avatar-7:#B14FCB;
+    --avatar-8:#D9642F;
+    --surface-alt:#F7F9FB;
+    --surface-alt2:#FAFBFC;
+    --surface-alt3:#F5F7F9;
+    --row-border:#EEF1F4;
+    --kp-bg:#F3F5F8;
+    --kp-bg-active:#E7EBF0;
+    --kp-back-bg:#EAEDF1;
+    --sheet-close-bg:#F1F3F6;
+    --segmented-bg:#EAEDF1;
+    --seg-active-text:var(--navy);
+  }
+  [data-theme="dark"]{
+    --bg:#12161C;
+    --surface:#1B212B;
+    --border:#2A313D;
+    --text:#EDF1F5;
+    --text-muted:#97A2B3;
+    --text-faint:#68727F;
+    --surface-alt:#20272F;
+    --surface-alt2:#1E252D;
+    --surface-alt3:#232A33;
+    --row-border:#2A313D;
+    --kp-bg:#232A33;
+    --kp-bg-active:#2A313D;
+    --kp-back-bg:#2A313D;
+    --sheet-close-bg:#232A33;
+    --segmented-bg:#232A33;
+    --seg-active-text:var(--teal);
+    --teal-tint:#123434;
+    --green-tint:#0F2A1D;
+    --red-tint:#331512;
+    --amber-tint:#332409;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    overscroll-behavior:none;
+  }
+  .num{font-family:'IBM Plex Mono',monospace; font-variant-numeric:tabular-nums;}
+  #app{
+    max-width:480px; margin:0 auto; min-height:100vh; min-height:100dvh;
+    display:flex; flex-direction:column; background:var(--bg); position:relative;
+    box-shadow:0 0 40px rgba(11,37,69,0.08);
+  }
+
+  /* ---------- HEADER ---------- */
+  header.topbar{
+    background:linear-gradient(155deg,var(--navy) 0%,var(--navy-2) 100%);
+    color:#fff; padding:16px 18px 14px; flex-shrink:0;
+    position:sticky; top:0; z-index:20;
+  }
+  .topbar-row{display:flex; align-items:center; justify-content:space-between;}
+  .brand{display:flex; align-items:baseline; gap:8px;}
+  .brand-mark{font-weight:700; font-size:20px; letter-spacing:0.5px;}
+  .brand-sub{font-size:11px; color:rgba(255,255,255,0.55); font-weight:500; letter-spacing:0.4px; text-transform:uppercase;}
+  .icon-btn{
+    width:36px; height:36px; border-radius:50%; border:none;
+    background:rgba(255,255,255,0.12); color:#fff; font-size:18px;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+  }
+  .icon-btn:active{background:rgba(255,255,255,0.22);}
+  .game-edit-btn{
+    background:rgba(255,255,255,0.14); color:#fff; border:1px solid rgba(255,255,255,0.32); border-radius:8px;
+    padding:5px 13px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit; margin-left:auto; flex-shrink:0;
+  }
+  .game-edit-btn:active{background:rgba(255,255,255,0.24);}
+  .game-meta{display:flex; align-items:center; gap:10px; margin-top:12px; font-size:12.5px; color:rgba(255,255,255,0.75); flex-wrap:wrap;}
+  .game-meta b{color:#fff; font-weight:600;}
+  .dot-sep{width:3px; height:3px; border-radius:50%; background:rgba(255,255,255,0.4); flex-shrink:0;}
+  .progress-track{margin-top:10px; height:6px; border-radius:4px; background:rgba(255,255,255,0.15); overflow:hidden;}
+  .progress-fill{height:100%; background:var(--teal); border-radius:4px; transition:width .35s ease;}
+
+  /* ---------- MAIN ---------- */
+  main{flex:1; overflow-y:auto; padding:16px 16px 96px; -webkit-overflow-scrolling:touch;}
+  .view{display:none;}
+  .view.active{display:block; animation:fadein .18s ease;}
+  @keyframes fadein{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);}}
+
+  h2.view-title{font-size:19px; font-weight:700; margin:2px 0 14px;}
+  .section-label{font-size:11.5px; font-weight:600; text-transform:uppercase; letter-spacing:0.6px; color:var(--text-muted); margin:20px 0 8px;}
+  .section-label:first-child{margin-top:0;}
+
+  .card{background:var(--surface); border-radius:var(--radius); border:1px solid var(--border); padding:16px;}
+
+  /* ---------- EMPTY STATES ---------- */
+  .empty-state{text-align:center; padding:48px 20px; color:var(--text-muted);}
+  .empty-emoji{font-size:38px; margin-bottom:10px;}
+  .empty-state h3{color:var(--text); font-size:16px; margin:0 0 6px;}
+  .empty-state p{font-size:13.5px; line-height:1.5; margin:0 0 18px;}
+
+  /* ---------- BUTTONS ---------- */
+  .btn{
+    border:none; border-radius:var(--radius-sm); padding:13px 18px; font-size:14.5px;
+    font-weight:600; font-family:inherit; cursor:pointer; display:inline-flex;
+    align-items:center; justify-content:center; gap:6px; transition:transform .08s ease, opacity .15s;
+  }
+  .btn:active{transform:scale(0.97);}
+  .btn:disabled{opacity:0.4; cursor:not-allowed;}
+  .btn-block{width:100%;}
+  .btn-primary{background:var(--teal); color:#fff;}
+  .btn-primary:active:not(:disabled){background:var(--teal-dark);}
+  .btn-navy{background:var(--navy); color:#fff;}
+  .btn-secondary{background:var(--teal-tint); color:var(--teal-dark);}
+  .btn-ghost{background:transparent; color:var(--text-muted); border:1px solid var(--border);}
+  .btn-danger{background:var(--red-tint); color:var(--red);}
+  .btn-sm{padding:8px 12px; font-size:13px; border-radius:8px;}
+
+  /* ---------- BOTTOM NAV ---------- */
+  nav.bottom-nav{
+    position:fixed; left:50%; transform:translateX(-50%); bottom:0; width:100%; max-width:480px;
+    background:var(--surface); border-top:1px solid var(--border);
+    display:flex; padding:6px 4px calc(6px + env(safe-area-inset-bottom));
+    z-index:30;
+  }
+  .nav-btn{
+    flex:1; background:none; border:none; display:flex; flex-direction:column; align-items:center;
+    gap:3px; padding:6px 2px; color:var(--text-faint); font-size:10.5px; font-weight:600;
+    font-family:inherit; cursor:pointer; letter-spacing:0.2px;
+  }
+  .nav-btn svg{width:20px; height:20px;}
+  .nav-btn.active{color:var(--teal-dark);}
+  .nav-btn.active svg{stroke:var(--teal-dark);}
+
+  /* ---------- SCORE STRIP (Log viewer, unchanged) ---------- */
+  .totals-strip{display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; margin-bottom:16px; scrollbar-width:none;}
+  .totals-strip::-webkit-scrollbar{display:none;}
+  .total-chip{
+    flex-shrink:0; min-width:92px; background:var(--surface); border:1px solid var(--border);
+    border-radius:var(--radius); padding:10px 12px; position:relative;
+  }
+  .total-chip.leader{border-color:var(--amber); background:var(--amber-tint);}
+  .total-chip{text-align:center;}
+  .chip-top{display:flex; align-items:center; justify-content:center; gap:6px; margin-bottom:6px;}
+  .avatar{
+    width:22px; height:22px; border-radius:50%; color:#fff; font-size:10px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .avatar-lg{width:34px; height:34px; font-size:13px;}
+  .chip-name{font-size:11.5px; font-weight:600; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:70px;}
+  .chip-total{font-size:14px; font-weight:700; text-align:center;}
+  .chip-total.pos{color:var(--green);}
+  .chip-total.neg{color:var(--red);}
+  .leader-star{position:absolute; top:-6px; right:-6px; font-size:14px;}
+
+  /* ---------- HOME PAGE KPI STRIP (compact, borderless) ---------- */
+  .kpi-strip{margin-bottom:8px;}
+  .kpi-strip.kpi-grid{display:grid; gap:0;}
+  .kpi-strip.kpi-scroll{display:flex; gap:2px; overflow-x:auto; padding-bottom:2px; scrollbar-width:none;}
+  .kpi-strip.kpi-scroll::-webkit-scrollbar{display:none;}
+  .kpi-chip{position:relative; text-align:center; padding:6px 2px; min-width:0;}
+  .kpi-grid .kpi-chip{border-right:1px solid var(--border);}
+  .kpi-grid .kpi-chip:last-child{border-right:none;}
+  .kpi-scroll .kpi-chip{flex-shrink:0; min-width:64px; padding:6px 8px; border-right:1px solid var(--border);}
+  .kpi-scroll .kpi-chip:last-child{border-right:none;}
+  .kpi-name{
+    font-size:10.35px; font-weight:600; color:var(--text-muted); white-space:nowrap; overflow:hidden;
+    text-overflow:ellipsis; max-width:100%; margin-bottom:3px; text-align:center;
+  }
+  .kpi-chip.leader .kpi-name{color:var(--amber); font-weight:700;}
+  .kpi-total{font-size:14px; font-weight:700; text-align:center;}
+  .kpi-total.pos{color:var(--green);}
+  .kpi-total.neg{color:var(--red);}
+  .kpi-leader-star{position:absolute; top:-3px; right:0; font-size:10px;}
+
+  /* ---------- SCORE TABLE ---------- */
+  .table-wrap{background:var(--surface); border-radius:var(--radius); border:1px solid var(--border); overflow:hidden;}
+  .table-scroll{overflow-x:auto;}
+  table.score-table{border-collapse:collapse; width:100%; min-width:100%;}
+  .score-table th, .score-table td{padding:10px 8px; text-align:center; white-space:nowrap; font-size:13px;}
+  .score-table thead th{
+    background:var(--surface-alt); border-bottom:1px solid var(--border); font-size:11px; font-weight:600;
+    text-transform:uppercase; letter-spacing:0.3px; color:var(--text-muted); position:sticky; top:0;
+  }
+  .score-table th.rd-col, .score-table td.rd-col{
+    position:sticky; left:0; background:var(--surface-alt); z-index:2; text-align:left; padding-left:14px; color:var(--text-muted); font-weight:600; min-width:44px;
+  }
+  .score-table tbody td.rd-col{background:var(--surface); font-size:11.5px;}
+  .score-table tbody tr:nth-child(even) td{background:var(--surface-alt2);}
+  .score-table tbody tr:nth-child(even) td.rd-col{background:var(--surface-alt3);}
+  .score-table tbody tr.current-row td{background:var(--teal-tint) !important;}
+  .score-table td.pos{color:var(--green); font-weight:600;}
+  .score-table td.neg{color:var(--red); font-weight:600;}
+  .score-table td.empty-cell{color:var(--text-faint);}
+  .score-table tbody tr:not(:last-child) td{border-bottom:1px solid var(--row-border);}
+  .th-name{display:flex; flex-direction:column; align-items:center; gap:4px;}
+  .round-winner-star{font-size:10px; margin-right:2px; vertical-align:middle;}
+
+  /* ---------- ACTION BAR ---------- */
+  .action-bar{display:flex; gap:10px; margin-top:16px;}
+  .score-fab{
+    flex:1; background:var(--teal); color:#fff; border:none; border-radius:var(--radius);
+    padding:16px; font-size:16px; font-weight:700; display:flex; align-items:center;
+    justify-content:center; gap:8px; cursor:pointer; box-shadow:0 6px 16px rgba(15,155,155,0.3);
+  }
+  .score-fab:active{transform:scale(0.98); background:var(--teal-dark);}
+  .edit-fab{
+    flex:1; background:var(--teal-tint); color:var(--teal-dark); border:1.5px solid var(--teal);
+    border-radius:var(--radius); padding:16px; font-size:14.5px; font-weight:700; display:flex;
+    align-items:center; justify-content:center; gap:7px; cursor:pointer; font-family:inherit;
+  }
+  .edit-fab:active:not(:disabled){transform:scale(0.98);}
+  .edit-fab:disabled{opacity:0.45; cursor:not-allowed; border-color:var(--border); color:var(--text-faint); background:var(--surface);}
+
+  /* ---------- FINISHED BANNER ---------- */
+  .finished-banner{
+    background:linear-gradient(155deg,var(--navy) 0%,var(--navy-2) 100%); color:#fff;
+    border-radius:var(--radius); padding:22px 18px; text-align:center; margin-bottom:16px;
+  }
+  .finished-banner .trophy{font-size:34px; margin-bottom:6px;}
+  .finished-banner .eyebrow{font-size:11px; text-transform:uppercase; letter-spacing:0.6px; color:rgba(255,255,255,0.6); font-weight:600;}
+  .finished-banner .winner-name{font-size:22px; font-weight:700; margin:4px 0 2px;}
+  .finished-banner .winner-score{font-size:13px; color:rgba(255,255,255,0.75);}
+  .finished-actions{display:flex; gap:10px; margin-top:16px;}
+  .finished-actions .btn{flex:1;}
+
+  /* ---------- PLAYERS VIEW ---------- */
+  .list-item{
+    display:flex; align-items:center; gap:12px; background:var(--surface); border:1px solid var(--border);
+    border-radius:var(--radius-sm); padding:12px 14px; margin-bottom:8px;
+  }
+  .list-item .name{flex:1; font-size:14.5px; font-weight:600;}
+  .list-item .sub{font-size:12px; color:var(--text-faint); font-weight:500;}
+  .remove-btn{background:none; border:none; color:var(--text-faint); font-size:18px; cursor:pointer; padding:4px 6px;}
+  .remove-btn:active{color:var(--red);}
+  .fab-add{
+    position:fixed; z-index:15;
+  }
+  .top-add-row{display:flex; justify-content:flex-end; margin-bottom:14px;}
+
+  /* ---------- SETTINGS VIEW ---------- */
+  .field{margin-bottom:16px;}
+  .field label{display:block; font-size:12.5px; font-weight:600; color:var(--text-muted); margin-bottom:7px;}
+  .field input[type=number], .field input[type=text]{
+    width:100%; border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 14px;
+    font-size:15px; font-family:inherit; background:var(--surface); color:var(--text);
+  }
+  .field input:focus{outline:none; border-color:var(--teal);}
+  .segmented{display:flex; background:var(--segmented-bg); border-radius:var(--radius-sm); padding:3px; gap:3px;}
+  .segmented button{
+    flex:1; border:none; background:none; padding:10px 8px; font-size:13px; font-weight:600;
+    color:var(--text-muted); border-radius:8px; cursor:pointer; font-family:inherit;
+  }
+  .segmented button.active{background:var(--surface); color:var(--seg-active-text); box-shadow:0 1px 3px rgba(0,0,0,0.08);}
+
+  .player-select-list{display:flex; flex-direction:column; gap:8px;}
+  .player-select-item{
+    display:flex; align-items:center; gap:12px; background:var(--surface); border:1.5px solid var(--border);
+    border-radius:var(--radius-sm); padding:11px 14px; cursor:pointer;
+  }
+  .player-select-item.picked{border-color:var(--teal); background:var(--teal-tint);}
+  .check-circle{
+    width:20px; height:20px; border-radius:50%; border:2px solid var(--border); flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; font-size:12px; color:#fff;
+  }
+  .picked .check-circle{background:var(--teal); border-color:var(--teal);}
+  .player-select-item .name{flex:1; font-size:14px; font-weight:600;}
+
+  .picker-count{font-size:12px; color:var(--text-muted); font-weight:500;}
+
+  /* ---------- LOG VIEW ---------- */
+  .game-card{
+    background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+    padding:14px; margin-bottom:10px; cursor:pointer;
+  }
+  .game-card-top{display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;}
+  .game-card-title{font-size:14.5px; font-weight:700;}
+  .badge{font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:20px; text-transform:uppercase; letter-spacing:0.3px;}
+  .badge-active{background:var(--teal-tint); color:var(--teal-dark);}
+  .badge-completed{background:var(--amber-tint); color:var(--amber);}
+  .game-card-sub{font-size:12.5px; color:var(--text-muted);}
+
+  /* ---------- MODAL / BOTTOM SHEET ---------- */
+  .backdrop{
+    position:fixed; inset:0; background:rgba(9,20,38,0.5); z-index:50; opacity:0; pointer-events:none;
+    transition:opacity .2s ease; display:flex; align-items:flex-end; justify-content:center;
+  }
+  .backdrop.open{opacity:1; pointer-events:auto;}
+  .sheet{
+    width:100%; max-width:480px; background:var(--surface); border-radius:20px 20px 0 0;
+    padding:18px 18px calc(18px + env(safe-area-inset-bottom)); max-height:88vh; overflow-y:auto;
+    transform:translateY(100%); transition:transform .25s cubic-bezier(.32,.72,0,1);
+  }
+  .backdrop.open .sheet{transform:translateY(0);}
+  .sheet-handle{width:36px; height:4px; background:var(--border); border-radius:3px; margin:0 auto 14px;}
+  .sheet-header{display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;}
+  .sheet-header h3{font-size:17px; font-weight:700; margin:0;}
+  .sheet-close{background:var(--sheet-close-bg); border:none; width:30px; height:30px; border-radius:50%; font-size:15px; color:var(--text-muted); cursor:pointer;}
+
+  /* ---------- MENU / DARK MODE SWITCH ---------- */
+  .menu-row{display:flex; align-items:center; justify-content:space-between; padding:6px 2px 14px; font-size:14.5px; font-weight:600; color:var(--text); cursor:pointer;}
+  .switch{width:42px; height:24px; background:var(--border); border-radius:20px; position:relative; transition:background .2s ease; flex-shrink:0;}
+  .switch .switch-knob{position:absolute; top:2px; left:2px; width:20px; height:20px; border-radius:50%; background:#fff; transition:transform .2s ease; box-shadow:0 1px 3px rgba(0,0,0,0.3);}
+  .switch.on{background:var(--teal);}
+  .switch.on .switch-knob{transform:translateX(18px);}
+
+  /* ---------- SCORE MODAL ---------- */
+  .amount-display{
+    text-align:center; padding:18px 0 14px; font-size:44px; font-weight:700; letter-spacing:0.5px;
+  }
+  .amount-display.neg{color:var(--red);}
+  .amount-display.pos{color:var(--green);}
+  .sign-toggle{display:flex; gap:8px; margin-bottom:12px;}
+  .sign-toggle button{
+    flex:1; padding:12px; border-radius:var(--radius-sm); border:1.5px solid var(--border);
+    background:var(--surface); font-size:18px; font-weight:700; color:var(--text-muted); cursor:pointer; font-family:inherit;
+  }
+  .sign-toggle button.active-neg{background:var(--red-tint); border-color:var(--red); color:var(--red);}
+  .sign-toggle button.active-pos{background:var(--green-tint); border-color:var(--green); color:var(--green);}
+  .keypad{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px;}
+  .keypad button{
+    padding:15px 0; font-size:19px; font-weight:600; border-radius:var(--radius-sm); border:none;
+    background:var(--kp-bg); color:var(--text); cursor:pointer; font-family:inherit;
+  }
+  .keypad button:active{background:var(--kp-bg-active);}
+  .keypad button.kp-clear{background:var(--red-tint); color:var(--red); font-size:13px; font-weight:700;}
+  .keypad button.kp-back{background:var(--kp-back-bg); font-size:16px;}
+  .player-pick-row{display:flex; gap:14px; overflow-x:auto; padding-bottom:4px; margin-bottom:14px; scrollbar-width:none; justify-content:center;}
+  .player-pick-row::-webkit-scrollbar{display:none;}
+  .pick-avatar-wrap{flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer; padding:2px; text-align:center;}
+  .avatar-star-zone{position:relative;}
+  .pick-avatar-wrap .avatar{border:3px solid transparent; transition:transform .1s ease;}
+  .pick-avatar-wrap.selected .avatar{border-color:var(--navy); box-shadow:0 0 0 3px var(--teal); transform:scale(1.06);}
+  .pick-avatar-wrap span{font-size:10.5px; font-weight:600; color:var(--text-muted); max-width:56px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center;}
+  .pick-avatar-wrap.selected span{color:var(--teal-dark); font-weight:700;}
+  .winner-star-btn{
+    position:absolute; top:-6px; right:-6px; width:20px; height:20px; border-radius:50%;
+    background:var(--surface); border:1.5px solid var(--border); font-size:11px; line-height:1;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0;
+    filter:grayscale(1) opacity(0.5);
+  }
+  .winner-star-btn.active{filter:none; border-color:var(--amber); background:var(--amber-tint); box-shadow:0 0 0 2px var(--amber-tint);}
+
+  /* ---------- EDIT SCORE ---------- */
+  .round-chip-row{display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; margin-bottom:4px; scrollbar-width:none;}
+  .round-chip-row::-webkit-scrollbar{display:none;}
+  .round-chip{
+    flex-shrink:0; padding:8px 15px; border-radius:20px; border:1.5px solid var(--border); background:var(--surface);
+    font-weight:700; font-size:13px; color:var(--text-muted); cursor:pointer; font-family:inherit;
+  }
+  .round-chip.active{background:var(--teal); border-color:var(--teal); color:#fff;}
+  .editscore-list{display:flex; flex-direction:column; gap:8px;}
+  .editscore-row{display:flex; align-items:center; gap:10px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px 12px;}
+  .er-main{flex:1; display:flex; align-items:center; gap:10px; cursor:pointer; min-width:0;}
+  .er-name{flex:1; font-size:14px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .er-value{font-size:15px; font-weight:700; flex-shrink:0;}
+  .winner-toggle{
+    width:30px; height:30px; border-radius:50%; border:1.5px solid var(--border); background:var(--surface);
+    font-size:14px; display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0;
+    filter:grayscale(1) opacity(0.5); padding:0;
+  }
+  .winner-toggle.active{filter:none; border-color:var(--amber); background:var(--amber-tint);}
+
+  .confirm-text{font-size:14px; color:var(--text-muted); line-height:1.5; margin-bottom:18px;}
+  .sheet-actions{display:flex; gap:10px;}
+  .sheet-actions .btn{flex:1;}
+
+  .toast{
+    position:fixed; bottom:86px; left:50%; transform:translateX(-50%) translateY(20px); z-index:60;
+    background:var(--navy); color:#fff; padding:10px 18px; border-radius:30px; font-size:13px; font-weight:600;
+    opacity:0; pointer-events:none; transition:all .25s ease; white-space:nowrap;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <header class="topbar" id="topbar"></header>
+
+  <main>
+    <section class="view" id="view-home"></section>
+    <section class="view" id="view-settings"></section>
+    <section class="view" id="view-players"></section>
+    <section class="view" id="view-log"></section>
+  </main>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn" data-view="home">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+      Home
+    </button>
+    <button class="nav-btn" data-view="settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+      New Game
+    </button>
+    <button class="nav-btn" data-view="players">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.5 3-6 6.5-6s6.5 2.5 6.5 6"/><path d="M16.5 4.2c1.5.5 2.5 1.9 2.5 3.5s-1 3-2.5 3.5M21.5 20c0-2.8-1.9-5-4.5-5.8"/></svg>
+      Players
+    </button>
+    <button class="nav-btn" data-view="log">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h8M8 17h4"/></svg>
+      Log
+    </button>
+  </nav>
+
+</div>
+
+<!-- SCORE ENTRY MODAL -->
+<div class="backdrop" id="backdrop-score">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <h3 id="score-modal-title">Add Score — Round 1</h3>
+      <button class="sheet-close" onclick="closeModal('score')">✕</button>
+    </div>
+    <div class="amount-display num" id="score-amount-display">0</div>
+    <div class="sign-toggle">
+      <button id="sign-pos" onclick="setSign(1)">+</button>
+      <button id="sign-neg" onclick="setSign(-1)">−</button>
+    </div>
+    <div class="keypad" id="keypad"></div>
+    <div class="section-label" style="margin-top:0;">Select Player</div>
+    <div class="player-pick-row" id="score-player-row"></div>
+    <button class="btn btn-primary btn-block" id="score-enter-btn" onclick="submitScore()">Enter</button>
+  </div>
+</div>
+
+<!-- ADD PLAYER MODAL -->
+<div class="backdrop" id="backdrop-addplayer">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <h3>Add Player</h3>
+      <button class="sheet-close" onclick="closeModal('addplayer')">✕</button>
+    </div>
+    <div class="field">
+      <label for="new-player-name">Player Name</label>
+      <input type="text" id="new-player-name" placeholder="e.g. Ahmed Rameez" autocomplete="off">
+    </div>
+    <button class="btn btn-primary btn-block" onclick="saveNewPlayer()">Save Player</button>
+  </div>
+</div>
+
+<!-- GENERIC CONFIRM MODAL -->
+<div class="backdrop" id="backdrop-confirm">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <h3 id="confirm-title">Are you sure?</h3>
+      <button class="sheet-close" onclick="closeModal('confirm')">✕</button>
+    </div>
+    <p class="confirm-text" id="confirm-text"></p>
+    <div class="sheet-actions">
+      <button class="btn btn-ghost" onclick="closeModal('confirm')">Cancel</button>
+      <button class="btn btn-danger" id="confirm-ok-btn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- GAME ACTIONS MENU -->
+<div class="backdrop" id="backdrop-menu">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <h3 id="menu-title">Menu</h3>
+      <button class="sheet-close" onclick="closeModal('menu')">✕</button>
+    </div>
+    <div class="menu-row" onclick="toggleTheme()">
+      <span>🌙 Dark Mode</span>
+      <div class="switch" id="theme-switch"><div class="switch-knob"></div></div>
+    </div>
+    <div style="height:1px; background:var(--border); margin:0 0 14px;"></div>
+    <div style="display:flex; flex-direction:column; gap:8px;">
+      <button class="btn btn-danger btn-block" id="menu-clear-btn" onclick="closeModal('menu'); clearCurrentGameLog();">Clear Log (reset scores)</button>
+      <button class="btn btn-navy btn-block" id="menu-end-btn" onclick="closeModal('menu'); endGameManually();">End Game Now</button>
+      <button class="btn btn-ghost btn-block" onclick="closeModal('menu')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- REPLACE PLAYER PICKER -->
+<div class="backdrop" id="backdrop-replaceplayer">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <h3 id="replaceplayer-title">Replace Player</h3>
+      <button class="sheet-close" onclick="closeModal('replaceplayer')">✕</button>
+    </div>
+    <div class="player-select-list" id="replaceplayer-body"></div>
+  </div>
+</div>
+
+<!-- EDIT SCORE MODAL -->
+<div class="backdrop" id="backdrop-editscore">
+  <div class="sheet" style="max-height:88vh;">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <h3 id="editscore-title">Edit Score — Round 1</h3>
+      <button class="sheet-close" onclick="closeModal('editscore')">✕</button>
+    </div>
+    <div id="editscore-body"></div>
+  </div>
+</div>
+
+<!-- EDIT LIMIT / CONTINUE MODAL -->
+<div class="backdrop" id="backdrop-editlimit">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <h3 id="editlimit-title">Continue Game</h3>
+      <button class="sheet-close" onclick="closeModal('editlimit')">✕</button>
+    </div>
+    <div class="field">
+      <label id="editlimit-label">New Limit</label>
+      <input type="number" id="editlimit-input" inputmode="numeric">
+    </div>
+    <button class="btn btn-primary btn-block" onclick="applyEditLimit()">Save & Continue</button>
+  </div>
+</div>
+
+<!-- GAME VIEWER MODAL (read-only, from Log) -->
+<div class="backdrop" id="backdrop-viewgame">
+  <div class="sheet" style="max-height:82vh;">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <h3 id="viewgame-title">Game</h3>
+      <button class="sheet-close" onclick="closeModal('viewgame')">✕</button>
+    </div>
+    <div id="viewgame-body"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================ STATE & STORAGE ============================ */
+const LS_PLAYERS = 'gandu_players_v1';
+const LS_GAMES = 'gandu_games_v1';
+
+let players = JSON.parse(localStorage.getItem(LS_PLAYERS) || '[]');
+let games = JSON.parse(localStorage.getItem(LS_GAMES) || '[]');
+
+let ui = {
+  view: 'home',
+  settingsMode: 'new',
+  settings: { playerIds: [], type: 'round', roundLimit: 8, scoreLimit: 500 },
+  scoreModal: { amount: '', sign: 1, playerId: null, winnerId: null },
+  editScore: { round: 1, editingPlayerId: null, amount: '', sign: 1 },
+  confirmAction: null,
+  editLimitTarget: null
+};
+
+let theme = localStorage.getItem('gandu_theme_v1') || 'light';
+function applyTheme(){
+  if(theme==='dark') document.documentElement.setAttribute('data-theme','dark');
+  else document.documentElement.removeAttribute('data-theme');
+}
+function toggleTheme(){
+  theme = theme==='dark' ? 'light' : 'dark';
+  localStorage.setItem('gandu_theme_v1', theme);
+  applyTheme();
+  updateThemeSwitchUI();
+}
+function updateThemeSwitchUI(){
+  const sw = document.getElementById('theme-switch');
+  if(sw) sw.classList.toggle('on', theme==='dark');
+}
+applyTheme();
+
+function persist(){
+  localStorage.setItem(LS_PLAYERS, JSON.stringify(players));
+  localStorage.setItem(LS_GAMES, JSON.stringify(games));
+}
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+const AVATAR_COLORS = ['--avatar-1','--avatar-2','--avatar-3','--avatar-4','--avatar-5','--avatar-6','--avatar-7','--avatar-8'];
+function avatarColor(id){
+  let idx = players.findIndex(p=>p.id===id);
+  if(idx<0) idx = 0;
+  return `var(${AVATAR_COLORS[idx % AVATAR_COLORS.length]})`;
+}
+function initials(name){
+  return name.trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
+}
+function playerName(id){
+  const p = players.find(p=>p.id===id);
+  return p ? p.name : 'Unknown';
+}
+function fmtSigned(n){
+  return (n>0? '+':'') + n;
+}
+function fmtDate(ts){
+  const d = new Date(ts);
+  return d.toLocaleDateString(undefined,{month:'short',day:'numeric'}) + ' · ' + d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});
+}
+
+/* ============================ GAME LOGIC ============================ */
+function getCurrentGame(){
+  return games.find(g => g.status === 'active') || null;
+}
+function getDisplayGame(){
+  return games.find(g => g.status === 'active') || games[games.length-1] || null;
+}
+function nextGameNumber(){
+  return games.length ? Math.max(...games.map(g=>g.number)) + 1 : 1;
+}
+function roundsOf(game){
+  const map = {};
+  game.entries.forEach(e=>{
+    if(!map[e.round]) map[e.round] = {};
+    map[e.round][e.playerId] = e.value;
+  });
+  return Object.keys(map).map(Number).sort((a,b)=>a-b).map(r => ({round:r, scores: map[r]}));
+}
+function currentRoundNumber(game){
+  if(game.entries.length===0) return 1;
+  const maxRound = Math.max(...game.entries.map(e=>e.round));
+  const filled = new Set(game.entries.filter(e=>e.round===maxRound).map(e=>e.playerId));
+  return filled.size >= game.playerIds.length ? maxRound+1 : maxRound;
+}
+function completedRoundsCount(game){
+  const rounds = roundsOf(game);
+  return rounds.filter(r => Object.keys(r.scores).length >= game.playerIds.length).length;
+}
+function totalsOf(game){
+  const totals = {};
+  game.playerIds.forEach(id => totals[id]=0);
+  game.entries.forEach(e => { totals[e.playerId] = (totals[e.playerId]||0) + e.value; });
+  return totals;
+}
+function leaderIds(game){
+  const totals = totalsOf(game);
+  const vals = game.playerIds.map(id=>totals[id]);
+  if(vals.length===0) return [];
+  const best = Math.max(...vals);
+  return game.playerIds.filter(id=>totals[id]===best);
+}
+function upsertScore(game, playerId, value){
+  const round = currentRoundNumber(game);
+  const existing = game.entries.find(e=>e.round===round && e.playerId===playerId);
+  if(existing){ existing.value = value; }
+  else { game.entries.push({round, playerId, value}); }
+  return round;
+}
+function getRoundWinner(game, round){
+  return (game.roundWinners || {})[round] || null;
+}
+function setRoundWinner(game, round, playerId){
+  if(!game.roundWinners) game.roundWinners = {};
+  if(playerId) game.roundWinners[round] = playerId;
+  else delete game.roundWinners[round];
+}
+function checkAutoComplete(game){
+  if(game.status!=='active') return;
+  if(game.type==='round'){
+    if(completedRoundsCount(game) >= game.roundLimit){
+      finishGame(game);
+    }
+  } else {
+    const totals = totalsOf(game);
+    const hit = game.playerIds.some(id => Math.abs(totals[id]) >= game.scoreLimit);
+    if(hit) finishGame(game);
+  }
+}
+function finishGame(game){
+  game.status = 'completed';
+  game.completedAt = Date.now();
+}
+
+/* ============================ NAVIGATION ============================ */
+function switchView(v){
+  ui.view = v;
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active', b.dataset.view===v));
+  document.querySelector('main').scrollTop = 0;
+  renderHeader();
+  renderView(v);
+}
+document.querySelectorAll('.nav-btn').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    if(b.dataset.view==='settings') openSettingsView();
+    else switchView(b.dataset.view);
+  });
+});
+
+/* ============================ MODALS ============================ */
+function openModal(name){ document.getElementById('backdrop-'+name).classList.add('open'); }
+function closeModal(name){ document.getElementById('backdrop-'+name).classList.remove('open'); }
+document.querySelectorAll('.backdrop').forEach(bd=>{
+  bd.addEventListener('click', e=>{ if(e.target===bd) bd.classList.remove('open'); });
+});
+
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(()=>t.classList.remove('show'), 1800);
+}
+
+function confirmAction(title, text, onConfirm, danger=true){
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-text').textContent = text;
+  const btn = document.getElementById('confirm-ok-btn');
+  btn.className = danger ? 'btn btn-danger' : 'btn btn-primary';
+  ui.confirmAction = onConfirm;
+  btn.onclick = () => { onConfirm(); closeModal('confirm'); };
+  openModal('confirm');
+}
+
+/* ============================ RENDER: HEADER ============================ */
+function renderHeader(){
+  const game = getDisplayGame();
+  const tb = document.getElementById('topbar');
+  if(ui.view !== 'home' || !game){
+    tb.innerHTML = `
+      <div class="topbar-row">
+        <div class="brand"><span class="brand-mark">GANDU</span><span class="brand-sub">Score Keeper</span></div>
+        <button class="icon-btn" onclick="openHeaderMenu()">⋮</button>
+      </div>`;
+    return;
+  }
+  const round = currentRoundNumber(game);
+  const totals = totalsOf(game);
+  const progressPct = game.type==='round'
+    ? Math.min(100, (completedRoundsCount(game)/game.roundLimit)*100)
+    : Math.min(100, (Math.max(0,...game.playerIds.map(id=>Math.abs(totals[id])))/game.scoreLimit)*100);
+  const limitText = game.type==='round' ? `Limit: ${game.roundLimit} rounds` : `Target: ${game.scoreLimit} pts`;
+  tb.innerHTML = `
+    <div class="topbar-row">
+      <div class="brand"><span class="brand-mark">GANDU</span><span class="brand-sub">Score Keeper</span></div>
+      <button class="icon-btn" onclick="openHeaderMenu()">⋮</button>
+    </div>
+    <div class="game-meta">
+      <span>${game.status==='completed' ? 'Finished' : 'Round ' + Math.min(round, game.type==='round'?game.roundLimit:round)}</span>
+      <span class="dot-sep"></span>
+      <span>${limitText}</span>
+      ${game.status==='active' ? `<button class="game-edit-btn" onclick="openEditPlayersView()">Game</button>` : ''}
+    </div>
+    <div class="progress-track"><div class="progress-fill" style="width:${progressPct}%"></div></div>
+  `;
+}
+function openHeaderMenu(){
+  const game = getDisplayGame();
+  document.getElementById('menu-title').textContent = game ? ('Game #' + game.number) : 'Menu';
+  document.getElementById('menu-clear-btn').style.display = game ? 'flex' : 'none';
+  document.getElementById('menu-end-btn').style.display = (game && game.status==='active') ? 'flex' : 'none';
+  updateThemeSwitchUI();
+  openModal('menu');
+}
+function clearCurrentGameLog(){
+  confirmAction('Clear Game Log?', "This will erase all rounds and scores for the current game. Players and settings stay the same. This can't be undone.", ()=>{
+    const g = getDisplayGame();
+    if(!g) return;
+    g.entries = [];
+    g.status = 'active';
+    g.completedAt = null;
+    persist();
+    renderAll();
+    toast('Game log cleared');
+  });
+}
+function endGameManually(){
+  confirmAction('End Game Now?', 'The current leader will be marked as the winner based on scores so far.', ()=>{
+    const g = getDisplayGame();
+    if(!g || g.status!=='active') return;
+    finishGame(g);
+    persist();
+    renderAll();
+  });
+}
+
+/* ============================ RENDER: HOME ============================ */
+function renderHome(){
+  const el = document.getElementById('view-home');
+  const activeOrLast = getDisplayGame();
+
+  if(players.length===0){
+    el.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-emoji">🃏</div>
+        <h3>Welcome to Gandu</h3>
+        <p>Add a few players to start keeping score for your next game.</p>
+        <button class="btn btn-primary" onclick="switchView('players')">Add Players</button>
+      </div>`;
+    return;
+  }
+  if(!activeOrLast){
+    el.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-emoji">🎯</div>
+        <h3>No active game</h3>
+        <p>Set up players, game type and a limit, then start tracking scores.</p>
+        <button class="btn btn-primary" onclick="openSettingsView()">Start New Game</button>
+      </div>`;
+    return;
+  }
+
+  const g = activeOrLast;
+  const totals = totalsOf(g);
+  const leaders = leaderIds(g);
+  const rounds = roundsOf(g);
+  const curRound = currentRoundNumber(g);
+
+  const stripHtml = g.playerIds.map(pid=>{
+    const t = totals[pid]||0;
+    const isLeader = leaders.includes(pid) && g.entries.length>0;
+    return `
+      <div class="kpi-chip ${isLeader?'leader':''}">
+        ${isLeader ? '<div class="kpi-leader-star">⭐</div>' : ''}
+        <div class="kpi-name">${playerName(pid)}</div>
+        <div class="kpi-total num ${t>0?'pos':t<0?'neg':''}">${fmtSigned(t)}</div>
+      </div>`;
+  }).join('');
+  const kpiCount = g.playerIds.length;
+  const kpiUseGrid = kpiCount <= 6;
+  const kpiStripClass = kpiUseGrid ? 'kpi-grid' : 'kpi-scroll';
+  const kpiStripStyle = kpiUseGrid ? ` style="grid-template-columns:repeat(${kpiCount},1fr);"` : '';
+
+  let tableRowsHtml = '';
+  if(rounds.length===0){
+    tableRowsHtml = `<tr><td class="rd-col">—</td>${g.playerIds.map(()=>`<td class="empty-cell">–</td>`).join('')}</tr>`;
+  } else {
+    tableRowsHtml = rounds.map(r=>{
+      const isCurrent = r.round===curRound && g.status==='active';
+      const roundWinner = getRoundWinner(g, r.round);
+      const cells = g.playerIds.map(pid=>{
+        const v = r.scores[pid];
+        const star = (roundWinner===pid) ? '<span class="round-winner-star">⭐</span>' : '';
+        if(v===undefined) return `<td class="empty-cell">–</td>`;
+        return `<td class="num ${v>0?'pos':v<0?'neg':''}">${star}${fmtSigned(v)}</td>`;
+      }).join('');
+      return `<tr class="${isCurrent?'current-row':''}"><td class="rd-col num">${r.round}</td>${cells}</tr>`;
+    }).join('');
+  }
+
+  const headerCells = g.playerIds.map(pid=>`
+    <th><div class="th-name">
+      <div class="avatar" style="background:${avatarColor(pid)}">${initials(playerName(pid))}</div>
+      <span>${playerName(pid).split(' ')[0]}</span>
+    </div></th>`).join('');
+
+  let bottomHtml = '';
+  if(g.status==='completed'){
+    const winners = leaders.map(id=>playerName(id)).join(' & ');
+    bottomHtml = `
+      <div class="finished-banner">
+        <div class="trophy">🏆</div>
+        <div class="eyebrow">Game Finished</div>
+        <div class="winner-name">${winners}</div>
+        <div class="winner-score num">${fmtSigned(totals[leaders[0]]||0)} pts · highest score wins</div>
+        <div class="finished-actions">
+          <button class="btn btn-ghost" style="background:rgba(255,255,255,0.12); color:#fff; border:none;" onclick="openEditLimitModal()">Continue Game</button>
+          <button class="btn btn-primary" onclick="openSettingsView(true)">New Game</button>
+        </div>
+      </div>`;
+  } else {
+    const canEdit = completedRoundsCount(g) > 0;
+    bottomHtml = `
+      <div class="action-bar">
+        <button class="score-fab" onclick="openScoreModal()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          ROUND SCORE
+        </button>
+        <button class="edit-fab" ${canEdit?'':'disabled'} onclick="openEditScoreModal()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          EDIT SCORE
+        </button>
+      </div>
+      <button class="btn btn-ghost btn-block" style="margin-top:10px;" onclick="endGameManually()">Complete Game</button>
+    `;
+  }
+
+  el.innerHTML = `
+    <div class="kpi-strip ${kpiStripClass}"${kpiStripStyle}>${stripHtml}</div>
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table class="score-table">
+          <thead><tr><th class="rd-col">Rd</th>${headerCells}</tr></thead>
+          <tbody>${tableRowsHtml}</tbody>
+        </table>
+      </div>
+    </div>
+    ${bottomHtml}
+  `;
+}
+
+/* ============================ RENDER: SETTINGS (NEW GAME) ============================ */
+function openSettingsView(reuseLastPlayers){
+  const last = games[games.length-1];
+  ui.settingsMode = 'new';
+  ui.settings = {
+    playerIds: reuseLastPlayers && last ? [...last.playerIds] : [],
+    type: 'round',
+    roundLimit: 8,
+    scoreLimit: 500
+  };
+  switchView('settings');
+}
+function openEditPlayersView(){
+  const game = getCurrentGame();
+  if(!game) return;
+  ui.settingsMode = 'edit';
+  ui.settings = {
+    playerIds: [...game.playerIds],
+    type: game.type, roundLimit: game.roundLimit, scoreLimit: game.scoreLimit,
+    editGameId: game.id, gameNumber: game.number, replacingId: null
+  };
+  switchView('settings');
+}
+function cancelEditPlayers(){
+  ui.settingsMode = 'new';
+  switchView('home');
+}
+function openReplacePlayerPicker(oldId){
+  ui.settings.replacingId = oldId;
+  renderReplacePlayerPicker();
+  openModal('replaceplayer');
+}
+function renderReplacePlayerPicker(){
+  const s = ui.settings;
+  const oldId = s.replacingId;
+  document.getElementById('replaceplayer-title').textContent = 'Replace ' + playerName(oldId);
+  const eligible = players.filter(p => !s.playerIds.includes(p.id));
+  const body = document.getElementById('replaceplayer-body');
+  if(eligible.length===0){
+    body.innerHTML = `
+      <p class="confirm-text">No other saved players available. Add a new player first, then try again.</p>
+      <button class="btn btn-secondary btn-block" onclick="closeModal('replaceplayer'); openModal('addplayer');">+ Add New Player</button>
+    `;
+    return;
+  }
+  body.innerHTML = eligible.map(p=>`
+    <div class="player-select-item" onclick="confirmReplacePlayer('${p.id}')">
+      <div class="avatar" style="background:${avatarColor(p.id)}">${initials(p.name)}</div>
+      <div class="name">${p.name}</div>
+    </div>`).join('');
+}
+function confirmReplacePlayer(newId){
+  const s = ui.settings;
+  const oldId = s.replacingId;
+  const oldName = playerName(oldId);
+  const newName = playerName(newId);
+  closeModal('replaceplayer');
+  confirmAction(`Replace ${oldName} with ${newName}?`, `${newName} takes over ${oldName}'s spot for the rest of this game. All existing rounds, scores and round winners stay exactly as they are — just under ${newName}'s name.`, ()=>{
+    const game = games.find(g=>g.id===s.editGameId);
+    if(!game) return;
+    const idx = game.playerIds.indexOf(oldId);
+    if(idx>-1) game.playerIds[idx] = newId;
+    game.entries.forEach(e=>{ if(e.playerId===oldId) e.playerId = newId; });
+    if(game.roundWinners){
+      Object.keys(game.roundWinners).forEach(r=>{
+        if(game.roundWinners[r]===oldId) game.roundWinners[r] = newId;
+      });
+    }
+    const sIdx = s.playerIds.indexOf(oldId);
+    if(sIdx>-1) s.playerIds[sIdx] = newId;
+    persist();
+    renderSettings();
+    toast(`${oldName} replaced with ${newName}`);
+  }, false);
+}
+function renderSettings(){
+  const el = document.getElementById('view-settings');
+  const s = ui.settings;
+  const mode = ui.settingsMode || 'new';
+
+  if(players.length===0){
+    el.innerHTML = `
+      <h2 class="view-title">${mode==='edit'?'Game Settings':'New Game'}</h2>
+      <div class="empty-state">
+        <div class="empty-emoji">👥</div>
+        <h3>No players yet</h3>
+        <p>Add at least two players before starting a game.</p>
+        <button class="btn btn-primary" onclick="switchView('players')">Add Players</button>
+      </div>`;
+    return;
+  }
+
+  const playerListHtml = players.map(p=>{
+    const picked = s.playerIds.includes(p.id);
+    return `
+      <div class="player-select-item ${picked?'picked':''}" onclick="togglePlayerPick('${p.id}')">
+        <div class="avatar" style="background:${avatarColor(p.id)}">${initials(p.name)}</div>
+        <div class="name">${p.name}</div>
+        <div class="check-circle">${picked?'✓':''}</div>
+      </div>`;
+  }).join('');
+
+  if(mode==='edit'){
+    const game = games.find(g=>g.id===s.editGameId);
+    const totals = game ? totalsOf(game) : {};
+    const rows = s.playerIds.map(pid=>{
+      const t = totals[pid]||0;
+      return `
+        <div class="editscore-row">
+          <div class="er-main" style="cursor:default;">
+            <div class="avatar" style="background:${avatarColor(pid)}">${initials(playerName(pid))}</div>
+            <div class="er-name">${playerName(pid)}</div>
+            <div class="er-value num ${t>0?'pos':t<0?'neg':''}">${fmtSigned(t)}</div>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="openReplacePlayerPicker('${pid}')">Replace</button>
+        </div>`;
+    }).join('');
+    el.innerHTML = `
+      <h2 class="view-title">Game Settings</h2>
+      <div class="section-label" style="margin-top:0;">Players in Game #${s.gameNumber}</div>
+      <div class="editscore-list">${rows}</div>
+      <button class="btn btn-secondary btn-block" style="margin-top:14px;" onclick="openModal('addplayer')">+ Add New Player to Roster</button>
+      <button class="btn btn-ghost btn-block" style="margin-top:24px;" onclick="cancelEditPlayers()">Done</button>
+    `;
+    return;
+  }
+
+  el.innerHTML = `
+    <h2 class="view-title">New Game</h2>
+
+    <div class="section-label" style="display:flex; justify-content:space-between; align-items:center;">
+      <span>Select Players</span>
+      <span class="picker-count">${s.playerIds.length} selected</span>
+    </div>
+    <div class="player-select-list">${playerListHtml}</div>
+    <button class="btn btn-secondary btn-block" style="margin-top:10px;" onclick="openModal('addplayer')">+ Add New Player</button>
+
+    <div class="section-label">Game Type</div>
+    <div class="segmented">
+      <button class="${s.type==='round'?'active':''}" onclick="setGameType('round')">Round Based</button>
+      <button class="${s.type==='score'?'active':''}" onclick="setGameType('score')">Score Based</button>
+    </div>
+
+    <div class="field" style="margin-top:16px;">
+      <label>${s.type==='round' ? 'Number of Rounds' : 'Target Score / Limit'}</label>
+      <input type="number" inputmode="numeric" id="limit-input" min="1"
+        value="${s.type==='round' ? s.roundLimit : s.scoreLimit}"
+        oninput="updateLimitInput(this.value)">
+    </div>
+
+    <button class="btn btn-primary btn-block" style="margin-top:24px;" ${s.playerIds.length<2?'disabled':''} onclick="startGame()">Start Game</button>
+  `;
+}
+function togglePlayerPick(id){
+  const s = ui.settings;
+  const idx = s.playerIds.indexOf(id);
+  if(idx>-1) s.playerIds.splice(idx,1); else s.playerIds.push(id);
+  renderSettings();
+}
+function setGameType(t){ ui.settings.type = t; renderSettings(); }
+function updateLimitInput(v){
+  const n = Math.max(1, parseInt(v)||0);
+  if(ui.settings.type==='round') ui.settings.roundLimit = n; else ui.settings.scoreLimit = n;
+}
+function startGame(){
+  const s = ui.settings;
+  if(s.playerIds.length<2) return;
+  const activeExisting = getCurrentGame();
+  if(activeExisting){
+    confirmAction('Start a new game?', 'The current game "#'+activeExisting.number+'" is still active. Starting a new one will archive it as-is.', ()=>{
+      activeExisting.status = 'completed';
+      activeExisting.completedAt = Date.now();
+      createGameAndStart();
+    });
+  } else {
+    createGameAndStart();
+  }
+}
+function createGameAndStart(){
+  const s = ui.settings;
+  const game = {
+    id: uid(),
+    number: nextGameNumber(),
+    type: s.type,
+    roundLimit: s.roundLimit,
+    scoreLimit: s.scoreLimit,
+    playerIds: [...s.playerIds],
+    entries: [],
+    roundWinners: {},
+    status: 'active',
+    createdAt: Date.now(),
+    completedAt: null
+  };
+  games.push(game);
+  persist();
+  switchView('home');
+  toast('Game #' + game.number + ' started');
+}
+
+/* ============================ RENDER: PLAYERS ============================ */
+function renderPlayers(){
+  const el = document.getElementById('view-players');
+  if(players.length===0){
+    el.innerHTML = `
+      <h2 class="view-title">Players</h2>
+      <div class="empty-state">
+        <div class="empty-emoji">👤</div>
+        <h3>No players saved</h3>
+        <p>Add players once — they'll be ready for every future game.</p>
+        <button class="btn btn-primary" onclick="openModal('addplayer')">+ Add Player</button>
+      </div>`;
+    return;
+  }
+  const rows = players.map(p=>`
+    <div class="list-item">
+      <div class="avatar avatar-lg" style="background:${avatarColor(p.id)}">${initials(p.name)}</div>
+      <div class="name">${p.name}</div>
+      <button class="remove-btn" onclick="removePlayer('${p.id}')">✕</button>
+    </div>`).join('');
+  el.innerHTML = `
+    <div class="top-add-row">
+      <button class="btn btn-primary btn-sm" onclick="openModal('addplayer')">+ Add Player</button>
+    </div>
+    <h2 class="view-title" style="margin-top:-8px;">Players (${players.length})</h2>
+    ${rows}
+  `;
+}
+function removePlayer(id){
+  const p = players.find(p=>p.id===id);
+  if(!p) return;
+  confirmAction('Remove ' + p.name + '?', 'This removes them from your saved player list. Past game history is kept as-is.', ()=>{
+    players = players.filter(pl=>pl.id!==id);
+    persist();
+    renderAll();
+    toast('Player removed');
+  });
+}
+function saveNewPlayer(){
+  const input = document.getElementById('new-player-name');
+  const name = input.value.trim();
+  if(!name){ input.focus(); return; }
+  players.push({ id: uid(), name });
+  persist();
+  input.value = '';
+  closeModal('addplayer');
+  renderAll();
+  toast('Player added');
+}
+
+/* ============================ RENDER: LOG ============================ */
+function renderLog(){
+  const el = document.getElementById('view-log');
+  if(games.length===0){
+    el.innerHTML = `
+      <h2 class="view-title">Game Log</h2>
+      <div class="empty-state">
+        <div class="empty-emoji">📜</div>
+        <h3>No games yet</h3>
+        <p>Your finished and active games will show up here.</p>
+      </div>`;
+    return;
+  }
+  const rows = [...games].reverse().map(g=>{
+    const totals = totalsOf(g);
+    const leaders = leaderIds(g);
+    const sub = g.status==='completed'
+      ? `Winner: ${leaders.map(id=>playerName(id)).join(' & ')} · ${fmtDate(g.completedAt||g.createdAt)}`
+      : `${g.playerIds.length} players · started ${fmtDate(g.createdAt)}`;
+    return `
+      <div class="game-card" onclick="viewGame('${g.id}')">
+        <div class="game-card-top">
+          <div class="game-card-title">Game #${g.number}</div>
+          <span class="badge ${g.status==='active'?'badge-active':'badge-completed'}">${g.status}</span>
+        </div>
+        <div class="game-card-sub">${sub}</div>
+      </div>`;
+  }).join('');
+  el.innerHTML = `<h2 class="view-title">Game Log</h2>${rows}`;
+}
+function viewGame(id){
+  const g = games.find(g=>g.id===id);
+  if(!g) return;
+  const totals = totalsOf(g);
+  const rounds = roundsOf(g);
+  document.getElementById('viewgame-title').textContent = 'Game #' + g.number;
+  const stripHtml = g.playerIds.map(pid=>`
+    <div class="total-chip">
+      <div class="chip-top">
+        <div class="avatar" style="background:${avatarColor(pid)}">${initials(playerName(pid))}</div>
+        <div class="chip-name">${playerName(pid)}</div>
+      </div>
+      <div class="chip-total num ${totals[pid]>0?'pos':totals[pid]<0?'neg':''}">${fmtSigned(totals[pid]||0)}</div>
+    </div>`).join('');
+  const headerCells = g.playerIds.map(pid=>`<th>${playerName(pid).split(' ')[0]}</th>`).join('');
+  const bodyRows = rounds.length ? rounds.map(r=>`
+    <tr><td class="rd-col num">${r.round}</td>${g.playerIds.map(pid=>{
+      const v = r.scores[pid];
+      return v===undefined ? `<td class="empty-cell">–</td>` : `<td class="num ${v>0?'pos':v<0?'neg':''}">${fmtSigned(v)}</td>`;
+    }).join('')}</tr>`).join('') : `<tr><td class="rd-col">—</td>${g.playerIds.map(()=>'<td class="empty-cell">–</td>').join('')}</tr>`;
+  document.getElementById('viewgame-body').innerHTML = `
+    <div class="totals-strip" style="margin-bottom:14px;">${stripHtml}</div>
+    <div class="table-wrap"><div class="table-scroll">
+      <table class="score-table"><thead><tr><th class="rd-col">Rd</th>${headerCells}</tr></thead>
+      <tbody>${bodyRows}</tbody></table>
+    </div></div>
+  `;
+  openModal('viewgame');
+}
+
+/* ============================ SCORE MODAL ============================ */
+function openScoreModal(){
+  const game = getCurrentGame();
+  if(!game || game.status!=='active') return;
+  const round = currentRoundNumber(game);
+  ui.scoreModal = { amount:'', sign:1, playerId: game.playerIds[0], winnerId: getRoundWinner(game, round) };
+  renderScoreModal();
+  openModal('score');
+}
+function renderKeypad(){
+  const kp = document.getElementById('keypad');
+  const keys = ['1','2','3','4','5','6','7','8','9','C','0','⌫'];
+  kp.innerHTML = keys.map(k=>{
+    if(k==='C') return `<button class="kp-clear" onclick="kpPress('C')">CLR</button>`;
+    if(k==='⌫') return `<button class="kp-back" onclick="kpPress('back')">⌫</button>`;
+    return `<button onclick="kpPress('${k}')">${k}</button>`;
+  }).join('');
+}
+renderKeypad();
+function kpPress(k){
+  const m = ui.scoreModal;
+  if(k==='C'){ m.amount=''; }
+  else if(k==='back'){ m.amount = m.amount.slice(0,-1); }
+  else { if(m.amount.length<6) m.amount += k; }
+  renderScoreModal();
+}
+function setSign(s){ ui.scoreModal.sign = s; renderScoreModal(); }
+function renderScoreModal(){
+  const m = ui.scoreModal;
+  const disp = document.getElementById('score-amount-display');
+  const val = m.amount === '' ? '0' : m.amount;
+  disp.textContent = (m.sign<0 ? '−' : '') + val;
+  disp.className = 'amount-display num ' + (m.sign<0 ? 'neg':'pos');
+  document.getElementById('sign-pos').className = m.sign===1 ? 'active-pos':'';
+  document.getElementById('sign-neg').className = m.sign===-1 ? 'active-neg':'';
+
+  const game = getCurrentGame();
+  const row = document.getElementById('score-player-row');
+  if(game){
+    document.getElementById('score-modal-title').textContent = 'Add Score — Round ' + currentRoundNumber(game);
+    row.innerHTML = game.playerIds.map(pid=>`
+      <div class="pick-avatar-wrap ${m.playerId===pid?'selected':''}">
+        <div class="avatar-star-zone">
+          <div class="avatar avatar-lg" style="background:${avatarColor(pid)}" onclick="selectScorePlayer('${pid}')">${initials(playerName(pid))}</div>
+          <button class="winner-star-btn ${m.winnerId===pid?'active':''}" onclick="event.stopPropagation(); toggleRoundWinnerPick('${pid}')" title="Mark round winner">⭐</button>
+        </div>
+        <span onclick="selectScorePlayer('${pid}')">${playerName(pid).split(' ')[0]}</span>
+      </div>`).join('');
+  }
+  const btn = document.getElementById('score-enter-btn');
+  btn.disabled = !(m.playerId && m.amount !== '');
+}
+function selectScorePlayer(id){ ui.scoreModal.playerId = id; renderScoreModal(); }
+function toggleRoundWinnerPick(id){
+  ui.scoreModal.winnerId = (ui.scoreModal.winnerId===id) ? null : id;
+  renderScoreModal();
+}
+function submitScore(){
+  const m = ui.scoreModal;
+  if(!m.playerId || m.amount==='') return;
+  const game = getCurrentGame();
+  if(!game) return;
+  const value = m.sign * parseInt(m.amount, 10);
+  const round = upsertScore(game, m.playerId, value);
+  setRoundWinner(game, round, m.winnerId);
+  checkAutoComplete(game);
+  persist();
+  closeModal('score');
+  renderAll();
+  toast(`${playerName(m.playerId)} · ${fmtSigned(value)}`);
+}
+
+/* ============================ EDIT SCORE ============================ */
+function openEditScoreModal(){
+  const game = getCurrentGame();
+  if(!game) return;
+  const completedRounds = roundsOf(game).filter(r=>Object.keys(r.scores).length>=game.playerIds.length).map(r=>r.round);
+  if(completedRounds.length===0) return;
+  ui.editScore = { round: completedRounds[completedRounds.length-1], editingPlayerId: null, amount:'', sign:1 };
+  renderEditScoreModal();
+  openModal('editscore');
+}
+function renderEditScoreModal(){
+  const game = getCurrentGame();
+  if(!game) return;
+  const es = ui.editScore;
+  const completedRounds = roundsOf(game).filter(r=>Object.keys(r.scores).length>=game.playerIds.length).map(r=>r.round);
+  if(completedRounds.length===0){ closeModal('editscore'); return; }
+  if(!completedRounds.includes(es.round)) es.round = completedRounds[completedRounds.length-1];
+
+  document.getElementById('editscore-title').textContent = 'Edit Score — Round ' + es.round;
+  const body = document.getElementById('editscore-body');
+
+  if(es.editingPlayerId){
+    const pid = es.editingPlayerId;
+    const val = es.amount === '' ? '0' : es.amount;
+    body.innerHTML = `
+      <button class="btn btn-ghost btn-sm" style="margin-bottom:12px;" onclick="editScoreBack()">‹ Back to Round ${es.round}</button>
+      <div style="text-align:center; font-weight:600; margin-bottom:4px;">${playerName(pid)}</div>
+      <div class="amount-display num ${es.sign<0?'neg':'pos'}">${(es.sign<0?'−':'') + val}</div>
+      <div class="sign-toggle">
+        <button class="${es.sign===1?'active-pos':''}" onclick="esSetSign(1)">+</button>
+        <button class="${es.sign===-1?'active-neg':''}" onclick="esSetSign(-1)">−</button>
+      </div>
+      <div class="keypad" id="editscore-keypad"></div>
+      <button class="btn btn-primary btn-block" onclick="saveEditScore()">Save</button>
+    `;
+    renderEditScoreKeypad();
+  } else {
+    const roundChips = completedRounds.map(r=>`<button class="round-chip ${r===es.round?'active':''}" onclick="esSelectRound(${r})">R${r}</button>`).join('');
+    const winnerId = getRoundWinner(game, es.round);
+    const rows = game.playerIds.map(pid=>{
+      const entry = game.entries.find(e=>e.round===es.round && e.playerId===pid);
+      const value = entry ? entry.value : 0;
+      return `
+        <div class="editscore-row">
+          <div class="er-main" onclick="editScoreOpenPlayer('${pid}')">
+            <div class="avatar" style="background:${avatarColor(pid)}">${initials(playerName(pid))}</div>
+            <div class="er-name">${playerName(pid)}</div>
+            <div class="er-value num ${value>0?'pos':value<0?'neg':''}">${fmtSigned(value)}</div>
+          </div>
+          <button class="winner-toggle ${winnerId===pid?'active':''}" onclick="esToggleWinner('${pid}')" title="Mark round winner">⭐</button>
+        </div>`;
+    }).join('');
+    body.innerHTML = `
+      <div class="section-label" style="margin-top:0;">Select Round</div>
+      <div class="round-chip-row">${roundChips}</div>
+      <div class="section-label">Scores — tap a player to edit</div>
+      <div class="editscore-list">${rows}</div>
+      <button class="btn btn-ghost btn-block" style="margin-top:14px;" onclick="closeModal('editscore')">Done</button>
+    `;
+  }
+}
+function esSelectRound(r){ ui.editScore.round = r; ui.editScore.editingPlayerId = null; renderEditScoreModal(); }
+function esToggleWinner(pid){
+  const game = getCurrentGame();
+  if(!game) return;
+  const es = ui.editScore;
+  const cur = getRoundWinner(game, es.round);
+  setRoundWinner(game, es.round, cur===pid ? null : pid);
+  persist();
+  renderEditScoreModal();
+  renderHome();
+}
+function editScoreOpenPlayer(pid){
+  const game = getCurrentGame();
+  if(!game) return;
+  const es = ui.editScore;
+  const entry = game.entries.find(e=>e.round===es.round && e.playerId===pid);
+  const val = entry ? entry.value : 0;
+  es.editingPlayerId = pid;
+  es.sign = val<0 ? -1 : 1;
+  es.amount = String(Math.abs(val));
+  renderEditScoreModal();
+}
+function editScoreBack(){
+  ui.editScore.editingPlayerId = null;
+  renderEditScoreModal();
+}
+function esSetSign(s){ ui.editScore.sign = s; renderEditScoreModal(); }
+function renderEditScoreKeypad(){
+  const kp = document.getElementById('editscore-keypad');
+  const keys = ['1','2','3','4','5','6','7','8','9','C','0','⌫'];
+  kp.innerHTML = keys.map(k=>{
+    if(k==='C') return `<button class="kp-clear" onclick="esKpPress('C')">CLR</button>`;
+    if(k==='⌫') return `<button class="kp-back" onclick="esKpPress('back')">⌫</button>`;
+    return `<button onclick="esKpPress('${k}')">${k}</button>`;
+  }).join('');
+}
+function esKpPress(k){
+  const es = ui.editScore;
+  if(k==='C'){ es.amount=''; }
+  else if(k==='back'){ es.amount = es.amount.slice(0,-1); }
+  else { if(es.amount.length<6) es.amount += k; }
+  renderEditScoreModal();
+}
+function saveEditScore(){
+  const game = getCurrentGame();
+  const es = ui.editScore;
+  if(!game){ return; }
+  if(es.amount===''){ es.editingPlayerId = null; renderEditScoreModal(); return; }
+  const value = es.sign * parseInt(es.amount, 10);
+  const entry = game.entries.find(e=>e.round===es.round && e.playerId===es.editingPlayerId);
+  if(entry) entry.value = value;
+  else game.entries.push({round: es.round, playerId: es.editingPlayerId, value});
+  checkAutoComplete(game);
+  persist();
+  es.editingPlayerId = null;
+  if(game.status==='completed'){
+    closeModal('editscore');
+    renderAll();
+    toast('Score updated — game complete');
+    return;
+  }
+  renderEditScoreModal();
+  renderAll();
+  toast('Score updated');
+}
+
+/* ============================ EDIT LIMIT / CONTINUE ============================ */
+function openEditLimitModal(){
+  const game = getDisplayGame();
+  if(!game) return;
+  ui.editLimitTarget = game.id;
+  const label = document.getElementById('editlimit-label');
+  const input = document.getElementById('editlimit-input');
+  if(game.type==='round'){
+    label.textContent = 'New Round Limit';
+    input.value = game.roundLimit + 4;
+  } else {
+    label.textContent = 'New Target Score';
+    input.value = game.scoreLimit + 200;
+  }
+  openModal('editlimit');
+}
+function applyEditLimit(){
+  const game = games.find(g=>g.id===ui.editLimitTarget);
+  if(!game) return;
+  const val = parseInt(document.getElementById('editlimit-input').value,10);
+  if(!val || val<1) return;
+  if(game.type==='round' && val<=completedRoundsCount(game)){
+    toast('Limit must be higher than rounds already played'); return;
+  }
+  if(game.type==='score'){
+    const totals = totalsOf(game);
+    const maxAbs = Math.max(0, ...game.playerIds.map(id=>Math.abs(totals[id]||0)));
+    if(val<=maxAbs){ toast('Limit must be higher than the current top score'); return; }
+  }
+  if(game.type==='round') game.roundLimit = val; else game.scoreLimit = val;
+  game.status = 'active';
+  game.completedAt = null;
+  persist();
+  closeModal('editlimit');
+  renderAll();
+  toast('Game continued');
+}
+
+/* ============================ MASTER RENDER ============================ */
+function renderView(v){
+  if(v==='home') renderHome();
+  else if(v==='settings') renderSettings();
+  else if(v==='players') renderPlayers();
+  else if(v==='log') renderLog();
+}
+function renderAll(){
+  renderHeader();
+  renderView(ui.view);
+}
+
+/* ============================ INIT ============================ */
+switchView('home');
+renderAll();
+</script>
+</body>
+</html>
