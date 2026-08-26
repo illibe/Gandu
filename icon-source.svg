@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0B2545"/>
+      <stop offset="100%" stop-color="#123362"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background: fills entire canvas edge-to-edge; the OS applies its own corner mask -->
+  <rect x="0" y="0" width="1024" height="1024" fill="url(#bg)"/>
+
+  <!-- Score sheet card -->
+  <rect x="205" y="205" width="614" height="614" rx="102" fill="#FFFFFF"/>
+
+  <!-- Rows -->
+  <rect x="297" y="309" width="522" height="87" rx="43.5" fill="#0F9B9B"/>
+  <rect x="297" y="474" width="313" height="87" rx="43.5" fill="#0B2545"/>
+  <rect x="297" y="619" width="428" height="87" rx="43.5" fill="#0F9B9B"/>
+
+  <!-- Winner star badge -->
+  <circle cx="804" cy="220" r="138" fill="#FFFFFF"/>
+  <polygon fill="#D99E0F" points="804.0,134.4 825.1,190.9 885.4,193.6 838.2,231.1 854.3,289.2 804.0,255.9 753.7,289.2 769.8,231.1 722.6,193.6 782.9,190.9"/>
+</svg>
