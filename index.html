@@ -369,32 +369,36 @@
 
   /* ---------- SCORE MODAL ---------- */
   .amount-display{
-    text-align:center; padding:18px 0 14px; font-size:44px; font-weight:700; letter-spacing:0.5px;
+    text-align:center; padding:10px 0 8px; font-size:42px; font-weight:700; letter-spacing:0.5px;
   }
   .amount-display.neg{color:var(--red);}
   .amount-display.pos{color:var(--green);}
-  .sign-toggle{display:flex; gap:8px; margin-bottom:12px;}
+  .sign-toggle{display:flex; gap:8px; margin-bottom:10px;}
   .sign-toggle button{
-    flex:1; padding:12px; border-radius:var(--radius-sm); border:1.5px solid var(--border);
+    flex:1; padding:11px; border-radius:var(--radius-sm); border:1.5px solid var(--border);
     background:var(--surface); font-size:18px; font-weight:700; color:var(--text-muted); cursor:pointer; font-family:inherit;
   }
   .sign-toggle button.active-neg{background:var(--red-tint); border-color:var(--red); color:var(--red);}
   .sign-toggle button.active-pos{background:var(--green-tint); border-color:var(--green); color:var(--green);}
-  .keypad{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px;}
+  .keypad{display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-bottom:10px;}
   .keypad button{
-    padding:15px 0; font-size:19px; font-weight:600; border-radius:var(--radius-sm); border:none;
+    padding:11px 0; font-size:18px; font-weight:600; border-radius:var(--radius-sm); border:none;
     background:var(--kp-bg); color:var(--text); cursor:pointer; font-family:inherit;
   }
   .keypad button:active{background:var(--kp-bg-active);}
   .keypad button.kp-clear{background:var(--red-tint); color:var(--red); font-size:13px; font-weight:700;}
   .keypad button.kp-back{background:var(--kp-back-bg); font-size:16px;}
-  .player-pick-row{display:flex; gap:20px; overflow-x:auto; padding:8px 6px 10px; margin-bottom:14px; scrollbar-width:none; justify-content:center;}
+  .player-pick-row{display:flex; gap:20px; overflow-x:auto; padding:8px 6px 10px; margin-bottom:10px; scrollbar-width:none; justify-content:center;}
   .player-pick-row::-webkit-scrollbar{display:none;}
-  .pick-avatar-wrap{flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:8px; cursor:pointer; padding:4px 2px; text-align:center; min-width:64px;}
+  .pick-avatar-wrap{position:relative; flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:8px; cursor:pointer; padding:4px 2px; text-align:center; min-width:64px;}
   .pick-avatar-wrap .avatar{border:3px solid transparent; transition:transform .1s ease;}
   .pick-avatar-wrap.selected .avatar{border-color:var(--navy); box-shadow:0 0 0 3px var(--teal); transform:scale(1.06);}
+  .pick-avatar-wrap.has-pending:not(.selected) .avatar{border-color:var(--teal);}
   .pick-avatar-wrap span{font-size:10.5px; font-weight:600; color:var(--text-muted); max-width:64px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:center;}
   .pick-avatar-wrap.selected span{color:var(--teal-dark); font-weight:700;}
+  .pending-badge{font-size:11px; font-weight:700; font-family:'IBM Plex Mono',monospace;}
+  .pending-badge.pos{color:var(--green);}
+  .pending-badge.neg{color:var(--red);}
   .winner-star-btn{
     width:28px; height:28px; border-radius:50%;
     background:var(--surface); border:1.5px solid var(--border); font-size:13px; line-height:1;
@@ -457,7 +461,7 @@
     <div class="sheet-handle"></div>
     <div class="sheet-header">
       <h3 id="score-modal-title">Add Score — Round 1</h3>
-      <button class="sheet-close" onclick="closeModal('score')">✕</button>
+      <button class="sheet-close" onclick="closeScoreModal()">✕</button>
     </div>
     <div class="amount-display num" id="score-amount-display">0</div>
     <div class="sign-toggle">
@@ -467,7 +471,10 @@
     <div class="keypad" id="keypad"></div>
     <div class="section-label" style="margin-top:0;">Select Player</div>
     <div class="player-pick-row" id="score-player-row"></div>
-    <button class="btn btn-primary btn-block" id="score-enter-btn" onclick="submitScore()">Enter</button>
+    <div style="display:flex; gap:10px;">
+      <button class="btn btn-secondary btn-block" id="score-add-btn" onclick="addStagedScore()">Add</button>
+      <button class="btn btn-primary btn-block" id="score-enter-btn" onclick="submitScore()">Enter</button>
+    </div>
   </div>
 </div>
 
@@ -1296,9 +1303,22 @@ function openScoreModal(){
   const game = getCurrentGame();
   if(!game || game.status!=='active') return;
   const round = currentRoundNumber(game);
-  ui.scoreModal = { amount:'', sign:1, playerId: game.playerIds[0], winnerId: getRoundWinner(game, round) };
+  ui.scoreModal = { amount:'', sign:1, playerId: game.playerIds[0], winnerId: getRoundWinner(game, round), pending: {} };
   renderScoreModal();
   openModal('score');
+}
+function closeScoreModal(){
+  const m = ui.scoreModal;
+  const pendingCount = Object.keys(m.pending || {}).length;
+  if(pendingCount > 0){
+    confirmAction(
+      'Discard unsaved scores?',
+      `You've added ${pendingCount} player score${pendingCount>1?'s':''} for this round that ${pendingCount>1?"haven't":"hasn't"} been entered yet. Closing now will discard ${pendingCount>1?'them':'it'}.`,
+      ()=>{ closeModal('score'); }
+    );
+  } else {
+    closeModal('score');
+  }
 }
 function renderKeypad(){
   const kp = document.getElementById('keypad');
@@ -1331,34 +1351,70 @@ function renderScoreModal(){
   const row = document.getElementById('score-player-row');
   if(game){
     document.getElementById('score-modal-title').textContent = 'Add Score — Round ' + currentRoundNumber(game);
-    row.innerHTML = game.playerIds.map(pid=>`
-      <div class="pick-avatar-wrap ${m.playerId===pid?'selected':''}">
+    row.innerHTML = game.playerIds.map(pid=>{
+      const hasPending = m.pending[pid] !== undefined;
+      const pendingVal = hasPending ? m.pending[pid] : null;
+      return `
+      <div class="pick-avatar-wrap ${m.playerId===pid?'selected':''} ${hasPending?'has-pending':''}">
         <button class="winner-star-btn ${m.winnerId===pid?'active':''}" onclick="event.stopPropagation(); toggleRoundWinnerPick('${pid}')" title="Mark round winner">⭐</button>
         <div class="avatar avatar-lg" style="background:${avatarColor(pid)}" onclick="selectScorePlayer('${pid}')">${initials(playerName(pid))}</div>
         <span onclick="selectScorePlayer('${pid}')">${playerName(pid).split(' ')[0]}</span>
-      </div>`).join('');
+        ${hasPending ? `<span class="pending-badge num ${pendingVal>0?'pos':pendingVal<0?'neg':''}" onclick="selectScorePlayer('${pid}')">${fmtSigned(pendingVal)}</span>` : ''}
+      </div>`;
+    }).join('');
   }
-  const btn = document.getElementById('score-enter-btn');
-  btn.disabled = !(m.playerId && m.amount !== '');
+  const addBtn = document.getElementById('score-add-btn');
+  addBtn.disabled = !(m.playerId && m.amount !== '');
+  const enterBtn = document.getElementById('score-enter-btn');
+  enterBtn.disabled = Object.keys(m.pending).length === 0;
 }
-function selectScorePlayer(id){ ui.scoreModal.playerId = id; renderScoreModal(); }
+function selectScorePlayer(id){
+  const m = ui.scoreModal;
+  m.playerId = id;
+  if(m.pending[id] !== undefined){
+    const v = m.pending[id];
+    m.sign = v < 0 ? -1 : 1;
+    m.amount = String(Math.abs(v));
+  } else {
+    m.amount = '';
+    m.sign = 1;
+  }
+  renderScoreModal();
+}
 function toggleRoundWinnerPick(id){
   ui.scoreModal.winnerId = (ui.scoreModal.winnerId===id) ? null : id;
   renderScoreModal();
 }
-function submitScore(){
+function addStagedScore(){
   const m = ui.scoreModal;
   if(!m.playerId || m.amount==='') return;
+  const value = m.sign * parseInt(m.amount, 10);
+  m.pending[m.playerId] = value;
+  m.playerId = null;
+  m.amount = '';
+  m.sign = 1;
+  renderScoreModal();
+}
+function submitScore(){
+  const m = ui.scoreModal;
   const game = getCurrentGame();
   if(!game) return;
-  const value = m.sign * parseInt(m.amount, 10);
-  const round = upsertScore(game, m.playerId, value);
+  const pendingIds = Object.keys(m.pending);
+  if(pendingIds.length===0) return;
+  let round = null;
+  pendingIds.forEach(pid=>{
+    round = upsertScore(game, pid, m.pending[pid]);
+  });
   setRoundWinner(game, round, m.winnerId);
   checkAutoComplete(game);
   persist();
   closeModal('score');
   renderAll();
-  toast(`${playerName(m.playerId)} · ${fmtSigned(value)}`);
+  if(pendingIds.length===1){
+    toast(`${playerName(pendingIds[0])} · ${fmtSigned(m.pending[pendingIds[0]])}`);
+  } else {
+    toast(`Round saved — ${pendingIds.length} players`);
+  }
 }
 
 /* ============================ EDIT SCORE ============================ */
