@@ -108,7 +108,7 @@
   /* ---------- HEADER ---------- */
   header.topbar{
     background:linear-gradient(155deg,var(--navy) 0%,var(--navy-2) 100%);
-    color:#fff; padding:16px 18px 14px; flex-shrink:0;
+    color:#fff; padding:calc(16px + env(safe-area-inset-top)) 18px 14px; flex-shrink:0;
     position:sticky; top:0; z-index:20;
   }
   .topbar-row{display:flex; align-items:center; justify-content:space-between;}
@@ -373,26 +373,26 @@
 
   /* ---------- SCORE MODAL ---------- */
   .amount-display{
-    text-align:center; padding:10px 0 8px; font-size:42px; font-weight:700; letter-spacing:0.5px;
+    text-align:center; padding:8px 0 6px; font-size:42px; font-weight:700; letter-spacing:0.5px;
   }
   .amount-display.neg{color:var(--red);}
   .amount-display.pos{color:var(--green);}
-  .sign-toggle{display:flex; gap:8px; margin-bottom:10px;}
+  .sign-toggle{display:flex; gap:8px; margin-bottom:8px;}
   .sign-toggle button{
-    flex:1; padding:11px; border-radius:var(--radius-sm); border:1.5px solid var(--border);
+    flex:1; padding:10px; border-radius:var(--radius-sm); border:1.5px solid var(--border);
     background:var(--surface); font-size:18px; font-weight:700; color:var(--text-muted); cursor:pointer; font-family:inherit;
   }
   .sign-toggle button.active-neg{background:var(--red-tint); border-color:var(--red); color:var(--red);}
   .sign-toggle button.active-pos{background:var(--green-tint); border-color:var(--green); color:var(--green);}
-  .keypad{display:grid; grid-template-columns:repeat(3,1fr); gap:6px; margin-bottom:10px;}
+  .keypad{display:grid; grid-template-columns:repeat(3,1fr); gap:5px; margin-bottom:8px;}
   .keypad button{
-    padding:11px 0; font-size:18px; font-weight:600; border-radius:var(--radius-sm); border:none;
+    padding:10px 0; font-size:18px; font-weight:600; border-radius:var(--radius-sm); border:none;
     background:var(--kp-bg); color:var(--text); cursor:pointer; font-family:inherit;
   }
   .keypad button:active{background:var(--kp-bg-active);}
   .keypad button.kp-clear{background:var(--red-tint); color:var(--red); font-size:13px; font-weight:700;}
   .keypad button.kp-back{background:var(--kp-back-bg); font-size:16px;}
-  .player-pick-row{display:flex; gap:20px; overflow-x:auto; padding:8px 6px 10px; margin-bottom:10px; scrollbar-width:none; justify-content:center;}
+  .player-pick-row{display:flex; gap:20px; overflow-x:auto; padding:6px 6px 8px; margin-bottom:8px; scrollbar-width:none; justify-content:center;}
   .player-pick-row::-webkit-scrollbar{display:none;}
   .pick-avatar-wrap{position:relative; flex-shrink:0; display:flex; flex-direction:column; align-items:center; gap:8px; cursor:pointer; padding:4px 2px; text-align:center; min-width:64px;}
   .pick-avatar-wrap .avatar{border:3px solid transparent; transition:transform .1s ease;}
@@ -467,14 +467,14 @@
       <h3 id="score-modal-title">Add Score — Round 1</h3>
       <button class="sheet-close" onclick="closeScoreModal()">✕</button>
     </div>
-    <div class="section-label" style="margin-top:0;">1. Enter Score</div>
+    <div class="section-label" style="margin:0 0 6px;">1. Enter Score</div>
     <div class="amount-display num" id="score-amount-display">0</div>
     <div class="sign-toggle">
       <button id="sign-pos" onclick="setSign(1)">+</button>
       <button id="sign-neg" onclick="setSign(-1)">−</button>
     </div>
     <div class="keypad" id="keypad"></div>
-    <div class="section-label" style="margin-top:10px;">2. Select Player</div>
+    <div class="section-label" style="margin:8px 0 6px;">2. Select Player</div>
     <div class="player-pick-row" id="score-player-row"></div>
     <div style="display:flex; gap:10px;">
       <button class="btn btn-secondary btn-block" id="score-add-btn" onclick="addStagedScore()">Add</button>
