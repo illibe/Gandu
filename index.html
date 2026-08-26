@@ -245,7 +245,6 @@
   .totals-cell-inner{display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;}
   .score-table thead tr.totals-row th.totals-cell.leader,
   .score-table tfoot tr.totals-row th.totals-cell.leader{background:var(--green-tint);}
-  .totals-leader-star{font-size:13px; line-height:1;}
   .totals-cell .num.pos{color:var(--green);}
   .totals-cell .num.neg{color:var(--red);}
 
@@ -281,15 +280,23 @@
 
   /* ---------- FINISHED BANNER ---------- */
   .finished-banner{
-    background:linear-gradient(155deg,var(--navy) 0%,var(--navy-2) 100%); color:#fff;
-    border-radius:var(--radius); padding:22px 18px; text-align:center; margin-bottom:16px;
+    background:linear-gradient(155deg,var(--navy) 0%,var(--navy-2) 100%);
+    border-radius:var(--radius); padding:18px; margin-bottom:16px;
   }
-  .finished-banner .trophy{font-size:34px; margin-bottom:6px;}
-  .finished-banner .eyebrow{font-size:11px; text-transform:uppercase; letter-spacing:0.6px; color:rgba(255,255,255,0.6); font-weight:600;}
-  .finished-banner .winner-name{font-size:22px; font-weight:700; margin:4px 0 2px;}
-  .finished-banner .winner-score{font-size:13px; color:rgba(255,255,255,0.75);}
-  .finished-actions{display:flex; gap:10px; margin-top:16px;}
-  .finished-actions .btn{flex:1;}
+  .finished-top{display:flex; align-items:center; justify-content:space-between; gap:14px; margin-bottom:16px;}
+  .finished-info{min-width:0;}
+  .finished-name{font-size:21px; font-weight:800; color:#fff; line-height:1.2;}
+  .finished-sub{font-size:13px; font-weight:700; color:#fff; margin-top:4px;}
+  .finished-trophy{font-size:32px; flex-shrink:0; line-height:1;}
+  .finished-actions{display:flex; gap:12px;}
+  .finished-actions button{
+    flex:1; border:none; border-radius:var(--radius-sm); padding:14px 10px; font-size:14.5px;
+    font-weight:700; color:#fff; cursor:pointer; font-family:inherit;
+  }
+  .finished-btn-secondary{background:rgba(255,255,255,0.14);}
+  .finished-btn-secondary:active{background:rgba(255,255,255,0.24);}
+  .finished-btn-primary{background:var(--teal);}
+  .finished-btn-primary:active{background:var(--teal-dark);}
 
   /* ---------- PLAYERS VIEW ---------- */
   .list-item{
@@ -945,7 +952,6 @@ function renderHome(){
     const isLeader = leaders.includes(pid) && g.entries.length>0;
     return `<th class="totals-cell ${isLeader?'leader':''}">
       <div class="totals-cell-inner">
-        ${isLeader ? '<span class="totals-leader-star">⭐</span>' : ''}
         <span class="num ${t>0?'pos':t<0?'neg':''}">${fmtSigned(t)}</span>
       </div>
     </th>`;
@@ -979,13 +985,16 @@ function renderHome(){
     const winners = leaders.map(id=>playerName(id)).join(' & ');
     bottomHtml = `
       <div class="finished-banner">
-        <div class="trophy">🏆</div>
-        <div class="eyebrow">Game Finished</div>
-        <div class="winner-name">${winners}</div>
-        <div class="winner-score num">${fmtSigned(totals[leaders[0]]||0)} pts · highest score wins</div>
+        <div class="finished-top">
+          <div class="finished-info">
+            <div class="finished-name">${winners}</div>
+            <div class="finished-sub num">The Winner &nbsp; ${fmtSigned(totals[leaders[0]]||0)} points</div>
+          </div>
+          <div class="finished-trophy">🏆</div>
+        </div>
         <div class="finished-actions">
-          <button class="btn btn-ghost" style="background:rgba(255,255,255,0.12); color:#fff; border:none;" onclick="openEditLimitModal()">Continue Game</button>
-          <button class="btn btn-primary" onclick="openSettingsView(true)">New Game</button>
+          <button class="finished-btn-secondary" onclick="openEditLimitModal()">Continue Game</button>
+          <button class="finished-btn-primary" onclick="openSettingsView(true)">New Game</button>
         </div>
       </div>`;
   } else {
